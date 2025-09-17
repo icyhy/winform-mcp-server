@@ -59,6 +59,9 @@
 ## 测试
 - 端到端测试脚本请放置在仓库根目录的 `test/` 目录中
 - 如需对 HTTP 端点进行自动化验证，可结合 Playwright 发起请求或集成 UI 自动化（本仓库暂未包含示例）
+- 使用Inspector进行测试
+  - 安装Inspector：npx @modelcontextprotocol/inspector node build/index.js
+  - 访问Inspector UI：`http://localhost:6247/`
 
 ## 许可证
 - 本仓库用于演示目的，按需添加许可证文件

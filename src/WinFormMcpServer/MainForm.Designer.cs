@@ -35,6 +35,7 @@ partial class MainForm
 		txtLog = new TextBox();
 		lblLog = new Label();
 		lblStatusTitle = new Label();
+		TestButton = new Button();
 		SuspendLayout();
 		// 
 		// btnStartStop
@@ -103,11 +104,23 @@ partial class MainForm
 		lblStatusTitle.TabIndex = 6;
 		lblStatusTitle.Text = "状态：";
 		// 
+		// TestButton
+		// 
+		TestButton.Enabled = false;
+		TestButton.Location = new Point(579, 21);
+		TestButton.Name = "TestButton";
+		TestButton.Size = new Size(89, 36);
+		TestButton.TabIndex = 7;
+		TestButton.Text = "Test";
+		TestButton.UseVisualStyleBackColor = true;
+		TestButton.Click += TestButton_Click;
+		// 
 		// MainForm
 		// 
 		AutoScaleDimensions = new SizeF(7F, 17F);
 		AutoScaleMode = AutoScaleMode.Font;
 		ClientSize = new Size(800, 450);
+		Controls.Add(TestButton);
 		Controls.Add(lblStatusTitle);
 		Controls.Add(lblLog);
 		Controls.Add(txtLog);
@@ -130,5 +143,7 @@ partial class MainForm
     private Label lblLog;
     private Label lblStatusTitle;
 
-    #endregion
+	#endregion
+
+	private Button TestButton;
 }

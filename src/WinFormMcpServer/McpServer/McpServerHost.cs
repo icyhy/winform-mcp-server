@@ -7,9 +7,12 @@ public class McpServerHost
 	public event Action<string>? OnLogMessage;
 	public bool IsRunning => _httpMcpServer.IsRunning;
 
-	public McpServerHost()
+	private readonly MainForm _mainForm;
+
+	public McpServerHost(MainForm mainForm)
 	{
-		_httpMcpServer = new HttpMcpServer();
+		_mainForm = mainForm;
+		_httpMcpServer = new HttpMcpServer(mainForm);
 		_httpMcpServer.OnLogMessage += message => OnLogMessage?.Invoke(message);
 	}
 
