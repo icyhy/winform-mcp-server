@@ -8,13 +8,6 @@
 - 协议与依赖：ModelContextProtocol 0.3.0-preview.4 系列包
 - 日志：Serilog（滚动文件日志）
 
-## 项目结构
-- <mcfile name="WinFormMcpServer.sln" path="src\WinFormMcpServer.sln"></mcfile>
-- <mcfile name="WinFormMcpServer.csproj" path="src\WinFormMcpServer\WinFormMcpServer.csproj"></mcfile>
-- <mcfile name="MainForm.cs" path="src\WinFormMcpServer\MainForm.cs"></mcfile>
-- <mcfile name="McpServerHost.cs" path="src\WinFormMcpServer\McpServer\McpServerHost.cs"></mcfile>
-- <mcfile name="HttpMcpServer.cs" path="src\WinFormMcpServer\McpServer\HttpMcpServer.cs"></mcfile>
-
 ## 前置条件
 - .NET SDK 8.0+
 - 可选：Visual Studio 2022（建议 Community 版）
@@ -63,5 +56,17 @@
   - 安装Inspector：npx @modelcontextprotocol/inspector node build/index.js
   - 访问Inspector UI：`http://localhost:6247/`
 
+## MCP集成
+```
+{
+    "mcpServers": {
+        "default-server": {
+            "type": "sse",
+            "url": "http://localhost:3000/sse",
+            "note": "For SSE connections, add this URL directly in your MCP Client"
+        }
+    }
+}
+```
 ## 许可证
 - 本仓库用于演示目的，按需添加许可证文件
