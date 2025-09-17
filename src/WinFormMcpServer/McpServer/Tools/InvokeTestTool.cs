@@ -6,11 +6,11 @@ using System.Windows.Forms;
 
 namespace WinFormMcpServer.McpServer.Tools;
 
-public class InvokeTestTool : IMcpTool
+public class InvokeTestTool : IMcpTool, IGuiTool
 {
-    private readonly MainForm _mainForm;
+    private MainForm _mainForm;
 
-    public InvokeTestTool(MainForm mainForm)
+    public void SetForm(MainForm mainForm)
     {
         _mainForm = mainForm;
     }

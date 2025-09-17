@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -54,6 +55,9 @@ public class HttpMcpServer
 		try
 		{
 			var builder = WebApplication.CreateEmptyBuilder(new());
+		
+		// 添加配置
+		builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
 			builder.WebHost.ConfigureKestrel(options =>
 			{
@@ -63,6 +67,25 @@ public class HttpMcpServer
 			builder.WebHost.UseKestrelCore();
 			builder.Services.AddLogging();
 			builder.Services.AddRoutingCore();
+			
+			// 添加静态文件和API服务
+			builder.Services.AddControllers();
+			
+			// 注册聊天服务
+			var configuration = builder.Configuration;
+			var useMockLlm = configuration.GetValue<bool>("Chat:UseMockLlm", true);
+			
+			builder.Services.AddScoped<WinFormMcpServer.Services.IChatService, WinFormMcpServer.Services.ChatService>();
+			
+			if (useMockLlm)
+			{
+				builder.Services.AddScoped<WinFormMcpServer.Services.ILlmService, WinFormMcpServer.Services.MockLlmService>();
+			}
+			else
+			{
+				builder.Services.AddHttpClient<WinFormMcpServer.Services.OpenAILlmService>();
+				builder.Services.AddScoped<WinFormMcpServer.Services.ILlmService, WinFormMcpServer.Services.OpenAILlmService>();
+			}
 
 			builder.Logging.AddConsole();
 			ConfigureSerilog(builder.Logging);
@@ -80,10 +103,26 @@ public class HttpMcpServer
 			// Resolve tools map if available
 			var tools = (_serviceProvider.GetService<IEnumerable<IMcpTool>>() ?? Array.Empty<IMcpTool>()).ToList();
 
-			tools.Add(new InvokeTestTool(_mainForm));
+			tools.ForEach(t =>
+			{
+				if (typeof(IGuiTool).IsAssignableFrom(t.GetType()))
+				{
+					((IGuiTool)t).SetForm(_mainForm);
+				}
+			});
 			_toolsByName = tools.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+			
+			// 配置静态文件服务
+			_app.UseStaticFiles();
+			
 			_app.UseRouting();
-			_app.UseEndpoints(_ => { });
+			_app.UseEndpoints(endpoints => 
+			{
+				endpoints.MapControllers();
+				
+				// 默认路由到聊天页面
+				endpoints.MapFallbackToFile("index.html");
+			});
 
 			//Handle the /stateless endpoint if no other endpoints have been matched by the call to UseRouting above.
 			HandleStatelessMcp(_app);
@@ -94,7 +133,7 @@ public class HttpMcpServer
 			await _app.StartAsync(cancellationToken);
 			IsRunning = true;
 
-			OnLogMessage?.Invoke($"MCP Server started on http://localhost:{port}/mcp");
+			OnLogMessage?.Invoke($"MCP Server started on http://localhost:{port}/sse");
 		}
 		catch (Exception ex)
 		{

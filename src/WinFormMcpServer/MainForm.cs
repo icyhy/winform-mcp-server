@@ -98,7 +98,25 @@ public partial class MainForm : Form
 		}
 	}
 
+	delegate void TestButtonClickDelegate();
 	public void InvokeTestButtonClick()
+	{
+		Task.Run(()=>
+		{
+			if (this.InvokeRequired)
+			{
+				TestButtonClickDelegate d = new TestButtonClickDelegate(InvokeTestButton);
+				this.Invoke(d);
+			}
+			else
+			{
+				InvokeTestButton();
+			}
+		});
+		
+	}
+
+	private void InvokeTestButton()
 	{
 		TestButton_Click(this, EventArgs.Empty);
 	}

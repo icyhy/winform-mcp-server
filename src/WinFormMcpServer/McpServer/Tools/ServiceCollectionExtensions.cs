@@ -15,6 +15,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMcpTool, EchoTool>();
         services.AddSingleton<IMcpTool, EchoSessionIdTool>();
         services.AddSingleton<IMcpTool, SampleLlmTool>();
+        services.AddSingleton<IMcpTool, InvokeTestTool>();
 
         return services;
     }
