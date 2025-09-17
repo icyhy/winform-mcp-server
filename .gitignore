@@ -1,0 +1,84 @@
+# See https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+
+## Build results
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+*.cache
+*.log
+*.tlog
+*.pdb
+*.opendb
+*.VC.db
+*.VC.opendb
+*.dbmdl
+*.mdb
+*.vsp
+*.vspx
+*.psess
+*.pidb
+*.svclog
+*.scc
+
+## Visual Studio
+.vs/
+*.ide/
+*.VC\
+*.ncb
+*.aps
+*.ilk
+*.idb
+*.ipch
+*.iobj
+*.ipdb
+*_i.c
+*_p.c
+*.i.s
+*.i.asm
+
+## NuGet
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
+# Uncomment if necessary, but generally avoid ignoring project.lock.json
+# project.lock.json
+
+## Logs
+logs/
+*.svclog
+
+## OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+## Others
+*.local
+*.tmp
+*.bak
+*.orig
+*.rej
+*.swp
+*.swo
+*.tmp_proj
+*.userosscache
+*.rsuser
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Rider
+.idea/
+*.sln.iml
+
+# Test
+TestResult*/
+*.trx
+
+# Publish output
+**/publish/
