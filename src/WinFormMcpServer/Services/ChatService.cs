@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using WinFormMcpServer.Models;
 using WinFormMcpServer.McpServer.Tools;
@@ -13,15 +14,18 @@ public class ChatService : IChatService
     private readonly ILogger<ChatService> _logger;
     private readonly IReadOnlyDictionary<string, IMcpTool> _toolsByName;
     private readonly ILlmService _llmService;
+    private readonly IMcpClientService _mcpClientService;
 
     public ChatService(
         ILogger<ChatService> logger, 
         IEnumerable<IMcpTool> tools,
-        ILlmService llmService)
+        ILlmService llmService,
+        IMcpClientService mcpClientService)
     {
         _logger = logger;
         _toolsByName = tools.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
         _llmService = llmService;
+        _mcpClientService = mcpClientService;
     }
 
     public async Task<ChatServiceResponse> ProcessMessageAsync(string message)
@@ -100,17 +104,38 @@ public class ChatService : IChatService
         var sb = new StringBuilder();
         sb.AppendLine("你是一个智能助手，可以调用各种工具来帮助用户。");
         sb.AppendLine();
-        sb.AppendLine("可用的工具:");
         
+        // 添加本地工具
+        sb.AppendLine("本地可用的工具:");
         foreach (var tool in _toolsByName.Values)
         {
             sb.AppendLine($"- {tool.Name}: {tool.Descriptor.Description}");
         }
         
+        // 添加远程工具
+        try
+        {
+            var remoteTools = _mcpClientService.GetAllToolsAsync().Result;
+            if (remoteTools.Any())
+            {
+                sb.AppendLine();
+                sb.AppendLine("远程可用的工具:");
+                foreach (var tool in remoteTools)
+                {
+                    sb.AppendLine($"- {tool.Name} (来自 {tool.ServerName}): {tool.Description}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "获取远程工具列表失败");
+        }
+        
         sb.AppendLine();
         sb.AppendLine("当你需要调用工具时，请使用以下格式:");
-        sb.AppendLine("TOOL_CALL: {\"name\": \"工具名称\", \"arguments\": {参数对象}}");
+        sb.AppendLine("TOOL_CALL: {\"name\": \"工具名称\", \"arguments\": {参数对象}, \"server\": \"服务器名称(可选)\"}");
         sb.AppendLine();
+        sb.AppendLine("对于本地工具，server字段可以省略。对于远程工具，请指定正确的服务器名称。");
         sb.AppendLine("请根据用户的需求智能地选择和调用合适的工具。");
         
         return sb.ToString();
@@ -147,9 +172,23 @@ public class ChatService : IChatService
 
     private async Task<object> ExecuteToolCall(ToolCallRequest toolCall)
     {
+        if (!string.IsNullOrEmpty(toolCall.Server))
+        {
+            // 调用远程Mcp工具
+            return await ExecuteRemoteToolCall(toolCall);
+        }
+        else
+        {
+            // 调用本地工具
+            return await ExecuteLocalToolCall(toolCall);
+        }
+    }
+
+    private async Task<object> ExecuteLocalToolCall(ToolCallRequest toolCall)
+    {
         if (!_toolsByName.TryGetValue(toolCall.Name, out var tool))
         {
-            throw new InvalidOperationException($"未找到工具: {toolCall.Name}");
+            throw new InvalidOperationException($"未找到本地工具: {toolCall.Name}");
         }
 
         // 将参数转换为JsonElement字典
@@ -167,13 +206,6 @@ public class ChatService : IChatService
         // 这是一个简化的实现，实际的MCP工具应该能处理这种情况
         try
         {
-            // 创建一个简化的调用参数
-            var requestParams = new CallToolRequestParams
-            {
-                Name = toolCall.Name,
-                Arguments = jsonArguments
-            };
-
             // 使用反射或直接调用，这里我们简化处理
             // 对于现有的工具，我们可以直接构造结果
             if (toolCall.Name.Equals("echo", StringComparison.OrdinalIgnoreCase))
@@ -189,13 +221,30 @@ public class ChatService : IChatService
             }
             else
             {
-                return new[] { new TextContentBlock { Text = $"工具 {toolCall.Name} 执行完成" } };
+                return new[] { new TextContentBlock { Text = $"本地工具 {toolCall.Name} 执行完成" } };
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "执行工具时发生错误: {ToolName}", toolCall.Name);
-            return new[] { new TextContentBlock { Text = $"工具执行失败: {ex.Message}" } };
+            _logger.LogError(ex, "执行本地工具时发生错误: {ToolName}", toolCall.Name);
+            return new[] { new TextContentBlock { Text = $"本地工具执行失败: {ex.Message}" } };
+        }
+    }
+
+    private async Task<object> ExecuteRemoteToolCall(ToolCallRequest toolCall)
+    {
+        try
+        {
+            _logger.LogInformation("调用远程工具: {ToolName} 在服务器 {ServerName}", toolCall.Name, toolCall.Server);
+            
+            var result = await _mcpClientService.CallToolAsync(toolCall.Server!, toolCall.Name, toolCall.Arguments);
+            
+            return new[] { new TextContentBlock { Text = $"远程工具 {toolCall.Name} 执行结果: {JsonSerializer.Serialize(result)}" } };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "执行远程工具时发生错误: {ToolName} 在服务器 {ServerName}", toolCall.Name, toolCall.Server);
+            return new[] { new TextContentBlock { Text = $"远程工具执行失败: {ex.Message}" } };
         }
     }
 
@@ -216,7 +265,11 @@ public class ChatService : IChatService
 
     private class ToolCallRequest
     {
-        public string Name { get; set; } = string.Empty;
-        public Dictionary<string, object>? Arguments { get; set; }
+	    [JsonPropertyName("name")]
+		public string Name { get; set; } = string.Empty;
+	    [JsonPropertyName("arguments")]
+		public Dictionary<string, object>? Arguments { get; set; }
+	    [JsonPropertyName("server")]
+		public string? Server { get; set; }
     }
 }

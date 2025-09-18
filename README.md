@@ -60,7 +60,7 @@
 ```
 {
     "mcpServers": {
-        "default-server": {
+        "winform-mcp-server": {
             "type": "sse",
             "url": "http://localhost:3000/sse",
             "note": "For SSE connections, add this URL directly in your MCP Client"

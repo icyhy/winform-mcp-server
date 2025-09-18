@@ -3,6 +3,8 @@ using ModelContextProtocol.Server;
 using System.Text.Json;
 using WinFormMcpServer.McpServer;
 using WinFormMcpServer.McpServer.Tools;
+using WinFormMcpServer.Services;
+using Microsoft.Extensions.Logging;
 
 namespace WinFormMcpServer;
 
@@ -10,11 +12,40 @@ public partial class MainForm : Form
 {
 	private McpServerHost? _mcpServer;
 	private bool _isServerRunning = false;
+	private IMcpClientService? _mcpClientService;
 
 	public MainForm()
 	{
 		InitializeComponent();
 		_mcpServer = new McpServerHost(this);
+		
+		// 初始化MCP客户端服务
+		InitializeMcpClientService();
+	}
+
+	private void InitializeMcpClientService()
+	{
+		try
+		{
+			var logger = new ConsoleLogger<McpClientService>();
+			_mcpClientService = new McpClientService(logger);
+			
+			// 订阅服务器状态变化事件
+			_mcpClientService.ServerStatusChanged += OnMcpServerStatusChanged;
+		}
+		catch (Exception ex)
+		{
+			LogMessage($"初始化MCP客户端服务失败: {ex.Message}");
+		}
+	}
+
+	private void OnMcpServerStatusChanged(object? sender, McpServerStatusChangedEventArgs e)
+	{
+		LogMessage($"MCP服务器 {e.ServerName} 状态变化: {e.OldStatus} -> {e.NewStatus}");
+		if (!string.IsNullOrEmpty(e.ErrorMessage))
+		{
+			LogMessage($"错误信息: {e.ErrorMessage}");
+		}
 	}
 
 	private void UpdateServerStatus()
@@ -72,6 +103,13 @@ public partial class MainForm : Form
 				await _mcpServer.StartAsync(port);
 				_isServerRunning = true;
 				LogMessage($"MCP服务器已在端口 {port} 上启动");
+				
+				// 服务器启动后，尝试连接所有启用的MCP客户端服务器
+				if (_mcpClientService != null)
+				{
+					LogMessage("正在连接MCP客户端服务器...");
+					await _mcpClientService.ConnectAllServersAsync();
+				}
 			}
 			catch (Exception ex)
 			{
@@ -94,6 +132,24 @@ public partial class MainForm : Form
 			catch
 			{
 				// 忽略停止服务器时的任何错误
+			}
+		}
+		
+		// 清理MCP客户端服务资源
+		if (_mcpClientService != null)
+		{
+			try
+			{
+				_mcpClientService.ServerStatusChanged -= OnMcpServerStatusChanged;
+				_mcpClientService.DisconnectAllServersAsync().Wait(1000);
+				if (_mcpClientService is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
+			}
+			catch
+			{
+				// 忽略清理时的任何错误
 			}
 		}
 	}
@@ -126,4 +182,10 @@ public partial class MainForm : Form
 		MessageBox.Show("This is a test!");
 	}
 
+	private void mcpConfigToolStripMenuItem_Click(object sender, EventArgs e)
+	{
+		// 打开MCP配置窗口
+		var configForm = new McpConfigForm(_mcpClientService);
+		configForm.ShowDialog();
+	}
 }

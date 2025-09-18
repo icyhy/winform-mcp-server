@@ -36,11 +36,15 @@ partial class MainForm
 		lblLog = new Label();
 		lblStatusTitle = new Label();
 		TestButton = new Button();
+		menuStrip = new MenuStrip();
+		configToolStripMenuItem = new ToolStripMenuItem();
+		mcpConfigToolStripMenuItem = new ToolStripMenuItem();
+		menuStrip.SuspendLayout();
 		SuspendLayout();
 		// 
 		// btnStartStop
 		// 
-		btnStartStop.Location = new Point(238, 21);
+		btnStartStop.Location = new Point(238, 45);
 		btnStartStop.Name = "btnStartStop";
 		btnStartStop.Size = new Size(113, 36);
 		btnStartStop.TabIndex = 0;
@@ -50,7 +54,7 @@ partial class MainForm
 		// 
 		// txtPort
 		// 
-		txtPort.Location = new Point(102, 26);
+		txtPort.Location = new Point(102, 50);
 		txtPort.Name = "txtPort";
 		txtPort.Size = new Size(120, 23);
 		txtPort.TabIndex = 1;
@@ -59,7 +63,7 @@ partial class MainForm
 		// lblPort
 		// 
 		lblPort.AutoSize = true;
-		lblPort.Location = new Point(31, 29);
+		lblPort.Location = new Point(31, 53);
 		lblPort.Name = "lblPort";
 		lblPort.Size = new Size(44, 17);
 		lblPort.TabIndex = 2;
@@ -70,7 +74,7 @@ partial class MainForm
 		lblStatus.AutoSize = true;
 		lblStatus.Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Bold);
 		lblStatus.ForeColor = Color.Red;
-		lblStatus.Location = new Point(473, 30);
+		lblStatus.Location = new Point(473, 54);
 		lblStatus.Name = "lblStatus";
 		lblStatus.Size = new Size(44, 17);
 		lblStatus.TabIndex = 3;
@@ -78,18 +82,18 @@ partial class MainForm
 		// 
 		// txtLog
 		// 
-		txtLog.Location = new Point(31, 89);
+		txtLog.Location = new Point(31, 113);
 		txtLog.Multiline = true;
 		txtLog.Name = "txtLog";
 		txtLog.ReadOnly = true;
 		txtLog.ScrollBars = ScrollBars.Vertical;
-		txtLog.Size = new Size(737, 339);
+		txtLog.Size = new Size(737, 315);
 		txtLog.TabIndex = 4;
 		// 
 		// lblLog
 		// 
 		lblLog.AutoSize = true;
-		lblLog.Location = new Point(31, 69);
+		lblLog.Location = new Point(31, 93);
 		lblLog.Name = "lblLog";
 		lblLog.Size = new Size(44, 17);
 		lblLog.TabIndex = 5;
@@ -98,7 +102,7 @@ partial class MainForm
 		// lblStatusTitle
 		// 
 		lblStatusTitle.AutoSize = true;
-		lblStatusTitle.Location = new Point(402, 30);
+		lblStatusTitle.Location = new Point(402, 54);
 		lblStatusTitle.Name = "lblStatusTitle";
 		lblStatusTitle.Size = new Size(44, 17);
 		lblStatusTitle.TabIndex = 6;
@@ -107,13 +111,36 @@ partial class MainForm
 		// TestButton
 		// 
 		TestButton.Enabled = false;
-		TestButton.Location = new Point(579, 21);
+		TestButton.Location = new Point(579, 45);
 		TestButton.Name = "TestButton";
 		TestButton.Size = new Size(89, 36);
 		TestButton.TabIndex = 7;
 		TestButton.Text = "Test";
 		TestButton.UseVisualStyleBackColor = true;
 		TestButton.Click += TestButton_Click;
+		// 
+		// menuStrip
+		// 
+		menuStrip.Items.AddRange(new ToolStripItem[] { configToolStripMenuItem });
+		menuStrip.Location = new Point(0, 0);
+		menuStrip.Name = "menuStrip";
+		menuStrip.Size = new Size(800, 24);
+		menuStrip.TabIndex = 8;
+		menuStrip.Text = "menuStrip1";
+		// 
+		// configToolStripMenuItem
+		// 
+		configToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { mcpConfigToolStripMenuItem });
+		configToolStripMenuItem.Name = "configToolStripMenuItem";
+		configToolStripMenuItem.Size = new Size(44, 20);
+		configToolStripMenuItem.Text = "配置";
+		// 
+		// mcpConfigToolStripMenuItem
+		// 
+		mcpConfigToolStripMenuItem.Name = "mcpConfigToolStripMenuItem";
+		mcpConfigToolStripMenuItem.Size = new Size(128, 22);
+		mcpConfigToolStripMenuItem.Text = "MCP 配置";
+		mcpConfigToolStripMenuItem.Click += mcpConfigToolStripMenuItem_Click;
 		// 
 		// MainForm
 		// 
@@ -128,9 +155,13 @@ partial class MainForm
 		Controls.Add(lblPort);
 		Controls.Add(txtPort);
 		Controls.Add(btnStartStop);
+		Controls.Add(menuStrip);
+		MainMenuStrip = menuStrip;
 		Name = "MainForm";
 		Text = "WinForm MCP Server";
 		FormClosing += Form1_FormClosing;
+		menuStrip.ResumeLayout(false);
+		menuStrip.PerformLayout();
 		ResumeLayout(false);
 		PerformLayout();
 	}
@@ -142,8 +173,10 @@ partial class MainForm
     private TextBox txtLog;
     private Label lblLog;
     private Label lblStatusTitle;
+    private Button TestButton;
+    private MenuStrip menuStrip;
+    private ToolStripMenuItem configToolStripMenuItem;
+    private ToolStripMenuItem mcpConfigToolStripMenuItem;
 
 	#endregion
-
-	private Button TestButton;
 }

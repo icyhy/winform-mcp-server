@@ -12,6 +12,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Serilog;
 using WinFormMcpServer.McpServer.Tools;
+using WinFormMcpServer.Services;
 
 namespace WinFormMcpServer.McpServer;
 
@@ -75,6 +76,8 @@ public class HttpMcpServer
 			var configuration = builder.Configuration;
 			var useMockLlm = configuration.GetValue<bool>("Chat:UseMockLlm", true);
 			
+			builder.Services.AddHttpClient<McpClientService>();
+			builder.Services.AddScoped<IMcpClientService, McpClientService>();
 			builder.Services.AddScoped<WinFormMcpServer.Services.IChatService, WinFormMcpServer.Services.ChatService>();
 			
 			if (useMockLlm)
