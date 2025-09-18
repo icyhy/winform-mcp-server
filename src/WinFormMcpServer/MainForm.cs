@@ -48,14 +48,7 @@ public partial class MainForm : Form
 		}
 	}
 
-	private void UpdateServerStatus()
-	{
-		// 更新UI状态
-		btnStartStop.Text = _isServerRunning ? "停止服务器" : "启动服务器";
-		txtPort.Enabled = !_isServerRunning;
-		lblStatus.Text = _isServerRunning ? "运行中" : "已停止";
-		lblStatus.ForeColor = _isServerRunning ? Color.Green : Color.Red;
-	}
+
 
 	private void LogMessage(string message)
 	{
@@ -72,38 +65,33 @@ public partial class MainForm : Form
 
 	private async void btnStartStop_Click(object sender, EventArgs e)
 	{
-		if (_isServerRunning)
-		{
-			// 停止服务器
-			try
-			{
-				await _mcpServer!.StopAsync();
-				_isServerRunning = false;
-				LogMessage("MCP服务器已停止");
-			}
-			catch (Exception ex)
-			{
-				LogMessage($"停止服务器时出错: {ex.Message}");
-			}
-		}
-		else
+		if (!_isServerRunning)
 		{
 			// 启动服务器
 			try
 			{
-				if (!int.TryParse(txtPort.Text, out int port))
+				var portText = txtPort.Text.Trim();
+				if (!int.TryParse(portText, out int port) || port <= 0 || port > 65535)
 				{
-					MessageBox.Show("请输入有效的端口号", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					MessageBox.Show("请输入有效的端口号 (1-65535)", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					return;
 				}
+
+				btnStartStop.Enabled = false;
+				btnStartStop.Text = "启动中...";
 
 				_mcpServer = new McpServerHost(this);
 				_mcpServer.OnLogMessage += LogMessage;
 
 				await _mcpServer.StartAsync(port);
+
 				_isServerRunning = true;
-				LogMessage($"MCP服务器已在端口 {port} 上启动");
-				
+				btnStartStop.Text = "停止服务器";
+				btnStartStop.Enabled = true;
+				txtPort.Enabled = false;
+				lblStatus.Text = "运行中";
+				lblStatus.ForeColor = Color.Green;
+
 				// 服务器启动后，尝试连接所有启用的MCP客户端服务器
 				if (_mcpClientService != null)
 				{
@@ -113,25 +101,101 @@ public partial class MainForm : Form
 			}
 			catch (Exception ex)
 			{
-				LogMessage($"启动服务器时出错: {ex.Message}");
+				MessageBox.Show($"启动服务器失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				btnStartStop.Text = "启动服务器";
+				btnStartStop.Enabled = true;
+				txtPort.Enabled = true;
+				_isServerRunning = false;
+				lblStatus.Text = "已停止";
+				lblStatus.ForeColor = Color.Red;
 			}
 		}
-
-		UpdateServerStatus();
+		else
+		{
+			// 停止服务器
+			await StopServerAsync();
+		}
 	}
 
-	private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+	private async Task StopServerAsync()
+	{
+		if (_mcpServer == null || !_isServerRunning)
+			return;
+
+		try
+		{
+			btnStartStop.Enabled = false;
+			btnStartStop.Text = "停止中...";
+
+			// 使用CancellationToken和超时控制
+			using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+			
+			try
+			{
+				await _mcpServer.StopAsync(cts.Token);
+			}
+			catch (OperationCanceledException)
+			{
+				LogMessage("服务器停止超时，正在强制终止...");
+				
+				// 强制终止：直接设置状态
+				_isServerRunning = false;
+				LogMessage("服务器已强制终止");
+			}
+
+			_isServerRunning = false;
+			btnStartStop.Text = "启动服务器";
+			btnStartStop.Enabled = true;
+			txtPort.Enabled = true;
+			lblStatus.Text = "已停止";
+			lblStatus.ForeColor = Color.Red;
+
+			// 清理服务器实例
+			if (_mcpServer != null)
+			{
+				_mcpServer.OnLogMessage -= LogMessage;
+				_mcpServer = null;
+			}
+		}
+		catch (Exception ex)
+		{
+			LogMessage($"停止服务器时发生错误: {ex.Message}");
+			
+			// 即使出现异常，也要重置UI状态
+			_isServerRunning = false;
+			btnStartStop.Text = "启动服务器";
+			btnStartStop.Enabled = true;
+			txtPort.Enabled = true;
+
+			// 清理服务器实例
+			if (_mcpServer != null)
+			{
+				_mcpServer.OnLogMessage -= LogMessage;
+				_mcpServer = null;
+			}
+		}
+	}
+
+	private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
 	{
 		if (_isServerRunning)
 		{
 			// 在窗体关闭前停止服务器
 			try
 			{
-				_mcpServer?.StopAsync().Wait(1000); // 等待最多1秒
+				// 使用更短的超时时间，避免阻塞窗体关闭
+				using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+				await _mcpServer?.StopAsync(cts.Token);
 			}
-			catch
+			catch (OperationCanceledException)
 			{
-				// 忽略停止服务器时的任何错误
+				// 超时时强制终止
+				LogMessage("窗体关闭时服务器停止超时，已强制终止");
+			}
+			catch (Exception ex)
+			{
+				// 记录错误但不阻止窗体关闭
+				LogMessage($"窗体关闭时停止服务器出错: {ex.Message}");
 			}
 		}
 		
@@ -141,15 +205,29 @@ public partial class MainForm : Form
 			try
 			{
 				_mcpClientService.ServerStatusChanged -= OnMcpServerStatusChanged;
-				_mcpClientService.DisconnectAllServersAsync().Wait(1000);
+				
+				// 使用超时控制断开连接
+				using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+				var disconnectTask = _mcpClientService.DisconnectAllServersAsync();
+				
+				try
+				{
+					await disconnectTask.WaitAsync(cts.Token);
+				}
+				catch (TimeoutException)
+				{
+					// 超时时继续清理
+				}
+				
 				if (_mcpClientService is IDisposable disposable)
 				{
 					disposable.Dispose();
 				}
 			}
-			catch
+			catch (Exception ex)
 			{
-				// 忽略清理时的任何错误
+				// 记录错误但不阻止窗体关闭
+				LogMessage($"清理MCP客户端服务时出错: {ex.Message}");
 			}
 		}
 	}

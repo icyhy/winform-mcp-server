@@ -31,12 +31,12 @@ public class McpServerHost
 		}
 	}
 
-	public async Task StopAsync()
+	public async Task StopAsync(CancellationToken cancellationToken = default)
 	{
 		try
 		{
 			OnLogMessage?.Invoke("Stopping MCP Server...");
-			await _httpMcpServer.StopAsync();
+			await _httpMcpServer.StopAsync(cancellationToken);
 			OnLogMessage?.Invoke("MCP Server stopped successfully");
 		}
 		catch (Exception ex)

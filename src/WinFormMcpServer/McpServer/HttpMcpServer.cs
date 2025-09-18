@@ -145,13 +145,50 @@ public class HttpMcpServer
 		}
 	}
 
-	public async Task StopAsync()
+	public async Task StopAsync(CancellationToken cancellationToken = default)
 	{
 		if (_app != null && IsRunning)
 		{
-			await _app.StopAsync();
-			IsRunning = false;
-			OnLogMessage?.Invoke("MCP Server stopped");
+			try
+			{
+				OnLogMessage?.Invoke("Stopping MCP Server...");
+				
+				// 停止WebApplication
+				await _app.StopAsync(cancellationToken);
+				
+				// 释放WebApplication资源
+				await _app.DisposeAsync();
+				_app = null;
+				
+				IsRunning = false;
+				OnLogMessage?.Invoke("MCP Server stopped successfully");
+			}
+			catch (OperationCanceledException)
+			{
+				OnLogMessage?.Invoke("MCP Server stop operation was cancelled");
+				throw;
+			}
+			catch (Exception ex)
+			{
+				OnLogMessage?.Invoke($"Error stopping MCP Server: {ex.Message}");
+				
+				// 即使出现异常，也要尝试释放资源
+				try
+				{
+					if (_app != null)
+					{
+						await _app.DisposeAsync();
+						_app = null;
+					}
+				}
+				catch
+				{
+					// 忽略释放资源时的异常
+				}
+				
+				IsRunning = false;
+				throw;
+			}
 		}
 	}
 
