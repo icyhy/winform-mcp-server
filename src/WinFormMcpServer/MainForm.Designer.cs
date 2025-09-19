@@ -39,6 +39,7 @@ partial class MainForm
 		menuStrip = new MenuStrip();
 		configToolStripMenuItem = new ToolStripMenuItem();
 		mcpConfigToolStripMenuItem = new ToolStripMenuItem();
+		llmApiConfigToolStripMenuItem = new ToolStripMenuItem();
 		menuStrip.SuspendLayout();
 		SuspendLayout();
 		// 
@@ -130,7 +131,7 @@ partial class MainForm
 		// 
 		// configToolStripMenuItem
 		// 
-		configToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { mcpConfigToolStripMenuItem });
+		configToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { mcpConfigToolStripMenuItem, llmApiConfigToolStripMenuItem });
 		configToolStripMenuItem.Name = "configToolStripMenuItem";
 		configToolStripMenuItem.Size = new Size(44, 20);
 		configToolStripMenuItem.Text = "配置";
@@ -138,9 +139,16 @@ partial class MainForm
 		// mcpConfigToolStripMenuItem
 		// 
 		mcpConfigToolStripMenuItem.Name = "mcpConfigToolStripMenuItem";
-		mcpConfigToolStripMenuItem.Size = new Size(128, 22);
+		mcpConfigToolStripMenuItem.Size = new Size(148, 22);
 		mcpConfigToolStripMenuItem.Text = "MCP 配置";
 		mcpConfigToolStripMenuItem.Click += mcpConfigToolStripMenuItem_Click;
+		// 
+		// llmApiConfigToolStripMenuItem
+		// 
+		llmApiConfigToolStripMenuItem.Name = "llmApiConfigToolStripMenuItem";
+		llmApiConfigToolStripMenuItem.Size = new Size(148, 22);
+		llmApiConfigToolStripMenuItem.Text = "LLM API 配置";
+		llmApiConfigToolStripMenuItem.Click += llmApiConfigToolStripMenuItem_Click;
 		// 
 		// MainForm
 		// 
@@ -177,6 +185,7 @@ partial class MainForm
     private MenuStrip menuStrip;
     private ToolStripMenuItem configToolStripMenuItem;
     private ToolStripMenuItem mcpConfigToolStripMenuItem;
+    private ToolStripMenuItem llmApiConfigToolStripMenuItem;
 
 	#endregion
 }

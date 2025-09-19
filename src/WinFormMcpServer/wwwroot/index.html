@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP 聊天助手</title>
+    <title>MCP远程调用助手</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>MCP 聊天助手</h1>
+            <h1>MCP远程调用助手</h1>
             <div class="status-indicator">
                 <span class="status-dot" id="statusDot"></span>
                 <span id="statusText">连接中...</span>
@@ -19,7 +19,7 @@
         <div class="chat-messages" id="chatMessages">
             <div class="message system-message">
                 <div class="message-content">
-                    <p>欢迎使用 MCP 聊天助手！我可以帮助您调用各种工具和服务。</p>
+                    <p>欢迎使用MCP远程调用助手！我可以帮助您调用各种工具和服务。</p>
                 </div>
                 <div class="message-time">刚刚</div>
             </div>
@@ -29,7 +29,7 @@
             <div class="input-wrapper">
                 <textarea 
                     id="messageInput" 
-                    placeholder="输入您的消息..." 
+                    placeholder="输入您的指令..." 
                     rows="1"
                     maxlength="2000"></textarea>
                 <button id="sendButton" class="send-button" disabled>

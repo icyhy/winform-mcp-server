@@ -13,6 +13,7 @@ using ModelContextProtocol.Server;
 using Serilog;
 using WinFormMcpServer.McpServer.Tools;
 using WinFormMcpServer.Services;
+using WinFormMcpServer.Models;
 
 namespace WinFormMcpServer.McpServer;
 
@@ -74,21 +75,17 @@ public class HttpMcpServer
 			
 			// 注册聊天服务
 			var configuration = builder.Configuration;
-			var useMockLlm = configuration.GetValue<bool>("Chat:UseMockLlm", true);
 			
 			builder.Services.AddHttpClient<McpClientService>();
-			builder.Services.AddScoped<IMcpClientService, McpClientService>();
-			builder.Services.AddScoped<WinFormMcpServer.Services.IChatService, WinFormMcpServer.Services.ChatService>();
+			builder.Services.AddSingleton<IMcpClientService, McpClientService>();
+			builder.Services.AddSingleton<WinFormMcpServer.Services.IChatService, WinFormMcpServer.Services.ChatService>();
 			
-			if (useMockLlm)
-			{
-				builder.Services.AddScoped<WinFormMcpServer.Services.ILlmService, WinFormMcpServer.Services.MockLlmService>();
-			}
-			else
-			{
-				builder.Services.AddHttpClient<WinFormMcpServer.Services.OpenAILlmService>();
-				builder.Services.AddScoped<WinFormMcpServer.Services.ILlmService, WinFormMcpServer.Services.OpenAILlmService>();
-			}
+			// 注册LLM API配置服务和工厂
+			builder.Services.AddSingleton<LlmApiConfigService>();
+			builder.Services.AddSingleton<LlmApiServiceFactory>();
+			
+			// 注册可配置的LLM服务
+			builder.Services.AddSingleton<WinFormMcpServer.Services.ILlmService, WinFormMcpServer.Services.ConfigurableLlmService>();
 
 			builder.Logging.AddConsole();
 			ConfigureSerilog(builder.Logging);

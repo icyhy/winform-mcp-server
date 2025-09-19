@@ -380,7 +380,11 @@ public class McpClientService : IMcpClientService, IDisposable
 	    try
 	    {
 		    var response = await client.CallToolAsync(toolName, arguments);
-		    return new { success = true };
+		    return new
+		    {
+			    success = true, 
+			    response = response
+		    };
 	    }
 	    catch (TaskCanceledException ex)
 	    {

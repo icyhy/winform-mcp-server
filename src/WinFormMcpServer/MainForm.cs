@@ -13,6 +13,8 @@ public partial class MainForm : Form
 	private McpServerHost? _mcpServer;
 	private bool _isServerRunning = false;
 	private IMcpClientService? _mcpClientService;
+    private LlmApiConfigService? _llmApiConfigService;
+    private LlmApiServiceFactory? _llmApiServiceFactory;
 
 	public MainForm()
 	{
@@ -21,6 +23,9 @@ public partial class MainForm : Form
 		
 		// 初始化MCP客户端服务
 		InitializeMcpClientService();
+		
+		// 初始化LLM API配置服务
+		InitializeLlmApiConfigService();
 	}
 
 	private void InitializeMcpClientService()
@@ -45,6 +50,20 @@ public partial class MainForm : Form
 		if (!string.IsNullOrEmpty(e.ErrorMessage))
 		{
 			LogMessage($"错误信息: {e.ErrorMessage}");
+		}
+	}
+
+	private void InitializeLlmApiConfigService()
+	{
+		try
+		{
+			_llmApiConfigService = new LlmApiConfigService();
+			_llmApiServiceFactory = new LlmApiServiceFactory(_llmApiConfigService);
+			LogMessage("LLM API配置服务初始化成功");
+		}
+		catch (Exception ex)
+		{
+			LogMessage($"初始化LLM API配置服务失败: {ex.Message}");
 		}
 	}
 
@@ -264,6 +283,20 @@ public partial class MainForm : Form
 	{
 		// 打开MCP配置窗口
 		var configForm = new McpConfigForm(_mcpClientService);
+		configForm.ShowDialog();
+	}
+
+	private void llmApiConfigToolStripMenuItem_Click(object sender, EventArgs e)
+	{
+		if (_llmApiConfigService == null)
+		{
+			MessageBox.Show("LLM API配置服务未初始化", "错误", 
+				MessageBoxButtons.OK, MessageBoxIcon.Error);
+			return;
+		}
+
+		// 打开LLM API配置窗口
+		var configForm = new LlmApiConfigForm(_llmApiConfigService);
 		configForm.ShowDialog();
 	}
 }

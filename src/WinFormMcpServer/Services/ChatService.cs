@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,7 +13,7 @@ namespace WinFormMcpServer.Services;
 public class ChatService : IChatService
 {
     private readonly ILogger<ChatService> _logger;
-    private readonly IReadOnlyDictionary<string, IMcpTool> _toolsByName;
+    private readonly IReadOnlyDictionary<string, IMcpTool> _localToolsByName;
     private readonly ILlmService _llmService;
     private readonly IMcpClientService _mcpClientService;
 
@@ -23,7 +24,7 @@ public class ChatService : IChatService
         IMcpClientService mcpClientService)
     {
         _logger = logger;
-        _toolsByName = tools.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        _localToolsByName = tools.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
         _llmService = llmService;
         _mcpClientService = mcpClientService;
     }
@@ -105,12 +106,12 @@ public class ChatService : IChatService
         sb.AppendLine("你是一个智能助手，可以调用各种工具来帮助用户。");
         sb.AppendLine();
         
-        // 添加本地工具
+        // 添加本地工具（暂无）
         sb.AppendLine("本地可用的工具:");
-        foreach (var tool in _toolsByName.Values)
-        {
-            sb.AppendLine($"- {tool.Name}: {tool.Descriptor.Description}");
-        }
+        // foreach (var tool in _toolsByName.Values)
+        // {
+        //     sb.AppendLine($"- {tool.Name}: {tool.Descriptor.Description}");
+        // }
         
         // 添加远程工具
         try
@@ -120,7 +121,7 @@ public class ChatService : IChatService
             {
                 sb.AppendLine();
                 sb.AppendLine("远程可用的工具:");
-                foreach (var tool in remoteTools)
+				foreach (var tool in remoteTools)
                 {
                     sb.AppendLine($"- {tool.Name} (来自 {tool.ServerName}): {tool.Description}");
                 }
@@ -186,7 +187,7 @@ public class ChatService : IChatService
 
     private async Task<object> ExecuteLocalToolCall(ToolCallRequest toolCall)
     {
-        if (!_toolsByName.TryGetValue(toolCall.Name, out var tool))
+        if (!_localToolsByName.TryGetValue(toolCall.Name, out var tool))
         {
             throw new InvalidOperationException($"未找到本地工具: {toolCall.Name}");
         }

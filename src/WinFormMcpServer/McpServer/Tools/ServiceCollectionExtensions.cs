@@ -11,7 +11,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IMcpSamplingFactory, DefaultMcpSamplingFactory>();
 
-        // Register tools
+        // Register local tools
         services.AddSingleton<IMcpTool, EchoTool>();
         services.AddSingleton<IMcpTool, EchoSessionIdTool>();
         services.AddSingleton<IMcpTool, SampleLlmTool>();
