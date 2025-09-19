@@ -1,6 +1,6 @@
 # WinForm MCP Server
 
-一个功能完整的基于 Windows Forms 的 MCP (Model Context Protocol) 服务器应用，集成了 LLM API 调用、聊天界面、工具管理等企业级功能。
+一个功能完整的基于 Windows Forms 的 MCP (Model Context Protocol) 应用Demo，集成了MCP Server、Mcp Client、 内嵌web服务、LLM API 调用、聊天界面、工具管理等功能，可作为企业级桌面程序开发的集成特定技术的参考代码。
 
 ## 🚀 核心功能
 
